@@ -5,10 +5,11 @@
 #
 # Each app's `resources` grant its service principal exactly what it needs, at deploy time.
 # Install (see README.md): run setup/01_build_data_assets (it also creates the AI Gateway model service),
-# fill in the `dev` target below, deploy the bundle from the workspace (deployments icon → Deploy), start
-# both apps, then run setup/02_grant_app_access.
+# fill in the `dev` target below, deploy the bundle from the workspace (deployments icon → Deploy; it also
+# starts both apps), then run setup/02_grant_app_access.
 bundle:
   name: energy-voicebot
+  engine: direct  # needed by `lifecycle.started` below
 
 sync:  # only the apps are uploaded
   exclude: ["setup/**", "eval/**"]
@@ -65,6 +66,10 @@ resources:
       name: energy-voicebot-agent
       description: "ENERGY voicebot agent — OpenAI Agents SDK on Databricks managed MCP"
       source_code_path: ./apps/agent
+      # Deploy starts the app with the `config` below (the Start button of the Bundle resources pane
+      # deploys the code without its command and env).
+      lifecycle:
+        started: true
       config:
         command: ["sh", "-c", "python start_server.py --port $DATABRICKS_APP_PORT"]
         env:
@@ -144,6 +149,8 @@ resources:
       name: energy-voicebot-ui
       description: "ENERGY voicebot voice demo — mic → agent stream → live text + speech, supervisor panel"
       source_code_path: ./apps/ui
+      lifecycle:
+        started: true
       config:
         command: ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port $DATABRICKS_APP_PORT"]
         env:

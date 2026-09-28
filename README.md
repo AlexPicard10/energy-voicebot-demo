@@ -102,18 +102,18 @@ In the `dev` target, paste the `genie_space_id` and `experiment_id` printed in s
 With `databricks.yml` open, click the **deployments** icon, choose the target **dev** and click
 **Deploy**, then **Deploy** again in the confirmation dialog. Progress shows in **Project output**.
 
-### 6. Start the apps
+The deploy also starts both apps with their command and environment (`lifecycle.started` in
+`databricks.yml`); wait until **Compute** → **Apps** shows both as **Running**. Don't start them with
+the run icon of the **Bundle resources** pane: it deploys the code without that configuration, and the
+apps crash on start (`KeyError: 'ENERGY_CATALOG'`). If that happened, deploy the bundle again.
 
-In the **Bundle resources** pane, click the run icon next to `energy_voicebot_agent`, then next to
-`energy_voicebot_ui`. Each run uploads the app's code and starts it.
-
-### 7. Grant the apps access
+### 6. Grant the apps access
 
 Open `setup/02_grant_app_access`, attach **serverless** compute and click **Run all**. It also grants
 the agent `EXECUTE` on the AI Gateway service; if you don't manage that service, the notebook prints the
 grant to ask its owner for.
 
-### 8. Try it
+### 7. Try it
 
 **Compute** → **Apps** → `energy-voicebot-ui` → open its URL in Chrome. Pick a caller and a scenario, or
 tap the mic. Click **Supervisor** to see the on-call alerts (try the **Angry escalation** scenario).
@@ -123,17 +123,15 @@ tap the mic. Click **Supervisor** to see the on-call alerts (try the **Angry esc
 - **Guardrails**: attach the competitor LLM-as-a-judge policy and the built-in ones —
   [setup/competitor_guardrail.md](setup/competitor_guardrail.md).
 - **Evaluation**: run `eval/evaluate_agent` (see [Observability and evaluation](#observability-and-evaluation)).
-- **Updates**: pull the Git folder, then repeat steps 5 and 6.
+- **Updates**: pull the Git folder, then deploy the bundle again (step 5).
 - **Clean up**: delete both apps in **Compute** → **Apps**, then run `setup/99_teardown`.
 
 ### With the Databricks CLI instead
 
-The setup notebooks still run in the workspace; the deploy steps 5 and 6 become:
+The setup notebooks still run in the workspace; step 5 becomes:
 
 ```bash
-databricks bundle deploy -t dev -p <profile>
-databricks bundle run energy_voicebot_agent -t dev -p <profile>
-databricks bundle run energy_voicebot_ui    -t dev -p <profile>
+databricks bundle deploy -t dev -p <profile>   # deploys and starts both apps
 ```
 
 ---
