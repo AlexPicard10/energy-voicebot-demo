@@ -268,6 +268,17 @@ def _sql(w, cfg: Config, statement: str) -> None:
                            f"{statement[:200]}")
 
 
+def _wait(get, done, what: str, timeout_min: int = 30):
+    """Poll get() every 30 s until done(value); return the last value."""
+    deadline = time.time() + timeout_min * 60
+    while not done(value := get()):
+        if time.time() > deadline:
+            raise TimeoutError(f"{what}: still not ready after {timeout_min} min ({value})")
+        print(f"  waiting for {what}…")
+        time.sleep(30)
+    return value
+
+
 def _insert(w, cfg: Config, table: str, rows: list[tuple], batch: int = 100) -> None:
     for i in range(0, len(rows), batch):
         values = ", ".join("(" + ", ".join(_v(c) for c in row) + ")" for row in rows[i:i + batch])
@@ -403,28 +414,38 @@ def phase_vs(w, cfg: Config) -> None:
     _header(f"Vector Search — {VS_ENDPOINT} / {index}")
     if VS_ENDPOINT not in {e.name for e in w.vector_search_endpoints.list_endpoints()}:
         print(f"  creating endpoint {VS_ENDPOINT} (a few minutes)…")
-        w.vector_search_endpoints.create_endpoint_and_wait(name=VS_ENDPOINT, endpoint_type=EndpointType.STANDARD)
+        w.vector_search_endpoints.create_endpoint(name=VS_ENDPOINT, endpoint_type=EndpointType.STANDARD)
+    # An index created while its endpoint is still provisioning never builds: wait for ONLINE first.
+    _wait(lambda: w.vector_search_endpoints.get_endpoint(endpoint_name=VS_ENDPOINT).endpoint_status.state.value,
+          lambda state: state == "ONLINE", f"endpoint {VS_ENDPOINT}")
 
-    if index in {i.name for i in w.vector_search_indexes.list_indexes(endpoint_name=VS_ENDPOINT)}:
-        # A sync can only be triggered once the index is ready (on a re-run, the first build may still be going).
-        deadline = time.time() + 30 * 60
-        while not (status := w.vector_search_indexes.get_index(index_name=index).status).ready:
-            if time.time() > deadline:
-                raise TimeoutError(f"{index} still not ready after 30 min: {status.message}")
-            print(f"  index not ready yet ({(status.message or '')[:80]}) — waiting…")
-            time.sleep(30)
-        w.vector_search_indexes.sync_index(index_name=index)
-        print("  index exists — sync triggered")
-    else:
-        w.vector_search_indexes.create_index(
-            name=index, endpoint_name=VS_ENDPOINT, primary_key="article_id",
-            index_type=VectorIndexType.DELTA_SYNC,
-            delta_sync_index_spec=DeltaSyncVectorIndexSpecRequest(
-                source_table=f"{cfg.fqs}.knowledgebase", pipeline_type=PipelineType.TRIGGERED,
-                embedding_source_columns=[EmbeddingSourceColumn(
-                    name="content", embedding_model_endpoint_name=EMBEDDING_MODEL)]),
-        )
-        print("  index created — the first sync takes a few minutes")
+    def index_names():
+        return {i.name for i in w.vector_search_indexes.list_indexes(endpoint_name=VS_ENDPOINT)}
+
+    if index in index_names():
+        failed = lambda s: "failed" in (s.message or "").lower()  # noqa: E731
+        status = w.vector_search_indexes.get_index(index_name=index).status
+        if not failed(status):
+            # A sync can only be triggered once the index is ready (on a re-run, the first build may still be going).
+            status = _wait(lambda: w.vector_search_indexes.get_index(index_name=index).status,
+                           lambda s: s.ready or failed(s), f"index {index}")
+        if not failed(status):
+            w.vector_search_indexes.sync_index(index_name=index)
+            print("  index exists — sync triggered")
+            return
+        print(f"  index failed ({status.message[:80]}) — re-creating it")
+        w.vector_search_indexes.delete_index(index_name=index)
+        _wait(index_names, lambda names: index not in names, f"deletion of {index}")
+
+    w.vector_search_indexes.create_index(
+        name=index, endpoint_name=VS_ENDPOINT, primary_key="article_id",
+        index_type=VectorIndexType.DELTA_SYNC,
+        delta_sync_index_spec=DeltaSyncVectorIndexSpecRequest(
+            source_table=f"{cfg.fqs}.knowledgebase", pipeline_type=PipelineType.TRIGGERED,
+            embedding_source_columns=[EmbeddingSourceColumn(
+                name="content", embedding_model_endpoint_name=EMBEDDING_MODEL)]),
+    )
+    print("  index created — the first sync takes a few minutes")
 
 
 # ---------------------------------------------------------------------------
