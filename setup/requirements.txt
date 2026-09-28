@@ -1,0 +1,6 @@
+# Installed by the setup notebooks (01_build_data_assets, 02_grant_app_access, 99_teardown).
+databricks-sdk>=0.100
+psycopg[binary]>=3.1
+pyyaml>=6
+mlflow>=3.15              # Unity Catalog trace location on set_experiment
+databricks-agents>=1.10.1 # required by mlflow for UC trace storage

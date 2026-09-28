@@ -1,0 +1,5 @@
+# Installed by the eval notebook. The agent runs in-process, so it needs the agent's runtime deps
+# plus the MLflow judges.
+-r ../apps/agent/requirements.txt
+databricks-agents>=1.10.1
+pyyaml>=6

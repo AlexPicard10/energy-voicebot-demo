@@ -1,0 +1,167 @@
+# ENERGY voicebot — one bundle, two Databricks Apps.
+#
+#   energy-voicebot-agent   the agent (OpenAI Agents SDK + Databricks managed MCP), served by MLflow AgentServer
+#   energy-voicebot-ui      voice demo UI + supervisor panel
+#
+# Each app's `resources` grant its service principal exactly what it needs, at deploy time.
+# Install (see README.md): run setup/01_build_data_assets, fill in the `dev` target below, deploy the
+# bundle from the workspace (deployments icon → Deploy), start both apps, then run setup/02_grant_app_access.
+bundle:
+  name: energy-voicebot
+
+sync:  # only the apps are uploaded
+  exclude: ["setup/**", "eval/**"]
+
+variables:
+  catalog:
+    description: Unity Catalog catalog holding the energy_voicebot schema
+  schema:
+    description: Schema for tables, UC functions, the Vector Search index and Genie data
+    default: energy_voicebot
+  warehouse_id:
+    description: SQL warehouse used by setup and by the UC function tool
+  llm_endpoint:
+    description: AI Gateway model service (3-level UC name) the agent calls
+  genie_space_id:
+    description: Genie space over customers / invoices (printed by setup/01_build_data_assets)
+  experiment_id:
+    description: MLflow experiment receiving the agent traces (printed by setup/01_build_data_assets)
+  lakebase_project:
+    description: Lakebase project id
+    default: energy-voicebot-oltp
+  lakebase_branch:
+    description: Lakebase branch id
+    default: production
+  suggest_model:
+    description: Foundation Model endpoint behind the UI's follow-up suggestions
+    default: databricks-gpt-5-4-mini
+  lakebase_branch_path:
+    description: Derived — do not set
+    default: projects/${var.lakebase_project}/branches/${var.lakebase_branch}
+  # EXAMPLE (disabled): web search through an external MCP server — see apps/agent/tools.py.
+  # web_search_connection:
+  #   description: UC connection of the You.com external MCP server
+  #   default: mcp-you-web-api
+
+targets:
+  # Fill in the <...> values. catalog and warehouse_id are needed before setup/01_build_data_assets;
+  # the other three after it (it prints genie_space_id and experiment_id).
+  dev:
+    default: true
+    variables:
+      catalog: "<catalog>"
+      warehouse_id: "<warehouse-id>"
+      llm_endpoint: "<catalog>.energy_voicebot.<gateway-service-name>"
+      genie_space_id: "<genie-space-id>"
+      experiment_id: "<experiment-id>"
+
+resources:
+  apps:
+    energy_voicebot_agent:
+      name: energy-voicebot-agent
+      description: "ENERGY voicebot agent — OpenAI Agents SDK on Databricks managed MCP"
+      source_code_path: ./apps/agent
+      config:
+        command: ["sh", "-c", "python start_server.py --port $DATABRICKS_APP_PORT"]
+        env:
+          - name: ENERGY_CATALOG
+            value: ${var.catalog}
+          - name: ENERGY_SCHEMA
+            value: ${var.schema}
+          - name: ENERGY_LLM_ENDPOINT
+            value: ${var.llm_endpoint}
+          - name: ENERGY_GENIE_SPACE_ID
+            value: ${var.genie_space_id}
+          - name: ENERGY_LAKEBASE_ENDPOINT
+            value: ${var.lakebase_branch_path}/endpoints/primary
+          - name: MLFLOW_TRACKING_URI
+            value: databricks
+          - name: MLFLOW_EXPERIMENT_ID
+            value_from: experiment
+          # EXAMPLE (disabled): web search
+          # - name: ENERGY_WEB_SEARCH_CONNECTION
+          #   value: ${var.web_search_connection}
+      resources:
+        - name: warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        # Managed MCP: UC functions server
+        - name: fn_get_consumption_history
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.get_consumption_history
+            securable_type: FUNCTION
+            permission: EXECUTE
+        - name: consumption
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.consumption
+            securable_type: TABLE
+            permission: SELECT
+        # Managed MCP: Vector Search server
+        - name: knowledgebase_index
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.knowledgebase_index
+            securable_type: TABLE
+            permission: SELECT
+        # Genie (Genie runs its SQL as the app, hence the table grants)
+        - name: genie_space
+          genie_space:
+            name: genie_space
+            space_id: ${var.genie_space_id}
+            permission: CAN_RUN
+        - name: customers
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.customers
+            securable_type: TABLE
+            permission: SELECT
+        - name: invoices
+          uc_securable:
+            securable_full_name: ${var.catalog}.${var.schema}.invoices
+            securable_type: TABLE
+            permission: SELECT
+        # EXAMPLE (disabled): web search — the external MCP server's UC connection
+        # - name: web_search_connection
+        #   uc_securable:
+        #     securable_full_name: ${var.web_search_connection}
+        #     securable_type: CONNECTION
+        #     permission: USE_CONNECTION
+        # Lakebase: injects PGHOST / PGPORT / PGUSER / PGDATABASE and creates the app's Postgres role
+        - name: lakebase
+          postgres:
+            branch: ${var.lakebase_branch_path}
+            database: ${var.lakebase_branch_path}/databases/databricks-postgres
+            permission: CAN_CONNECT_AND_CREATE
+        - name: experiment
+          experiment:
+            experiment_id: ${var.experiment_id}
+            permission: CAN_EDIT
+
+    energy_voicebot_ui:
+      name: energy-voicebot-ui
+      description: "ENERGY voicebot voice demo — mic → agent stream → live text + speech, supervisor panel"
+      source_code_path: ./apps/ui
+      config:
+        command: ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port $DATABRICKS_APP_PORT"]
+        env:
+          - name: AGENT_APP_NAME
+            value: ${resources.apps.energy_voicebot_agent.name}
+          - name: ENERGY_SCHEMA
+            value: ${var.schema}
+          - name: ENERGY_LAKEBASE_ENDPOINT
+            value: ${var.lakebase_branch_path}/endpoints/primary
+          - name: SUGGEST_MODEL
+            value: ${var.suggest_model}
+      resources:
+        - name: agent
+          app:
+            name: ${resources.apps.energy_voicebot_agent.name}
+            permission: CAN_USE
+        - name: suggest_model
+          serving_endpoint:
+            name: ${var.suggest_model}
+            permission: CAN_QUERY
+        - name: lakebase
+          postgres:
+            branch: ${var.lakebase_branch_path}
+            database: ${var.lakebase_branch_path}/databases/databricks-postgres
+            permission: CAN_CONNECT_AND_CREATE

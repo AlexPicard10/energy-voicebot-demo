@@ -1,0 +1,182 @@
+[
+  {
+    "article_id": "KB-001",
+    "title": "Installment plans for overdue or pending bills",
+    "url_name": "installment-plans-for-overdue-or-pending-bills",
+    "content": "If you cannot pay a bill in one go, ENERGY can split it into monthly installments.\n\nWho can ask: any residential or business customer with an overdue or pending (not yet due) invoice of EUR 50 or more.\n\nHow to ask: call the ENERGY customer line and talk to the voice assistant Sofia, or use the ENERGY app (Bills > Pay in installments). Have your customer ID and the invoice number ready. You choose the number of installments; the plan is confirmed immediately with a ticket number.\n\nWhat happens next: the invoice is suspended from the dunning process as soon as the plan is created, so no reminder or suspension notice is sent for it. The installments are added to your next bills (or collected by direct debit if it is active). If an installment is missed, the remaining balance becomes due in full.\n\nSee also: Installment plan terms and fees."
+  },
+  {
+    "article_id": "KB-002",
+    "title": "Installment plan terms and fees",
+    "url_name": "installment-plan-terms-and-fees",
+    "content": "ENERGY offers three installment terms on an overdue or pending invoice:\n\n- 3 monthly installments: no administration fee.\n- 6 monthly installments: administration fee of 1.5% of the invoice amount.\n- 12 monthly installments: administration fee of 3% of the invoice amount.\n\nThe fee is added to the first installment. No interest is charged on installment plans. The customer always chooses the term; the plan cannot be changed once created, but the remaining balance can be paid early at any time without penalty."
+  },
+  {
+    "article_id": "KB-003",
+    "title": "How to submit a self-reading of your meter",
+    "url_name": "how-to-submit-a-self-reading-of-your-meter",
+    "content": "A self-reading lets ENERGY bill your real consumption instead of an estimate.\n\nWhen: send it between the 25th of the month and the 5th of the following month. Readings sent outside this window are still recorded but are used for the next billing cycle.\n\nHow to read the meter:\n- Electricity (kWh): note the digits shown on the display for the total active energy (register A+ or 1.8.0), without decimals.\n- Gas (SMC or m3): note the black digits on the counter, ignoring the red digits after the comma.\n\nHow to send it: tell the voice assistant Sofia the value and confirm it, or use the ENERGY app (Meter > Send reading) or the website. You receive a ticket number as confirmation. A reading lower than the previous actual reading is flagged for a manual check."
+  },
+  {
+    "article_id": "KB-004",
+    "title": "Estimated and actual readings, and adjustment bills",
+    "url_name": "estimated-and-actual-readings-and-adjustment-bills",
+    "content": "When no actual reading is available, your bill is based on an estimate calculated from your past consumption and the season.\n\nActual readings come from the distributor (remote or on-site reading) or from your self-reading. When an actual reading arrives, the next bill includes an adjustment: if the estimates were too high you receive a credit, if they were too low the difference is charged.\n\nTo avoid large adjustments, send a self-reading every month during the reading window (25th to 5th), especially in winter when gas consumption rises quickly."
+  },
+  {
+    "article_id": "KB-005",
+    "title": "Understanding your bill",
+    "url_name": "understanding-your-bill",
+    "content": "An ENERGY bill has four main parts:\n\n1. Energy costs: the price of the electricity (kWh) or gas (SMC) you used, according to your offer.\n2. Network and meter costs: transport, distribution and meter management, set by the regulator and passed on without mark-up.\n3. System charges: general charges that fund the energy system, set by the regulator.\n4. Taxes: excise duties and VAT.\n\nThe first page shows the amount due, the due date, the billing period, whether the consumption is actual or estimated, and your supply point codes (POD for electricity, PDR for gas). The detail pages show the readings used and the price of each component."
+  },
+  {
+    "article_id": "KB-006",
+    "title": "Why is my bill higher than usual?",
+    "url_name": "why-is-my-bill-higher-than-usual",
+    "content": "The most common reasons for a higher bill are:\n\n- Weather: colder months raise gas and electricity use for heating; a cold snap can increase consumption by 30-50% compared with the previous month.\n- Estimated readings: if previous bills were estimated too low, an actual reading brings an adjustment.\n- Longer billing period: a bill that covers more days includes more consumption.\n- Price changes: with a variable-price offer (ENERGY Flex) the energy price follows the monthly wholesale index.\n- New appliances or more people at home.\n\nCompare the consumption and the average temperature month by month (available in the app, or ask Sofia to look at your recent usage). If you think a reading is wrong, send a self-reading or ask for an invoice check."
+  },
+  {
+    "article_id": "KB-007",
+    "title": "How often you receive a bill",
+    "url_name": "how-often-you-receive-a-bill",
+    "content": "Billing frequency depends on your annual consumption:\n\n- Standard customers: one bill per month.\n- Low consumers (under 1,500 kWh a year for electricity or under 500 SMC a year for gas): one bill every two months.\n\nBusiness customers are billed monthly. You can receive bills by email (paperless, recommended) or by post; the frequency is the same."
+  },
+  {
+    "article_id": "KB-008",
+    "title": "Invoice correction: what to do if a bill is wrong",
+    "url_name": "invoice-correction-what-to-do-if-a-bill-is-wrong",
+    "content": "If you think a bill contains an error (wrong reading, wrong price, duplicate charge), ask for an invoice check through the voice assistant, the app (Bills > Report a problem) or in writing.\n\nENERGY checks the bill within 10 working days. If the error is confirmed, a corrected bill or a credit note is issued within 30 days of your request. You do not need to pay the disputed part of the bill while the check is in progress, but please pay the undisputed part by the due date. If the correction results in a credit, it is deducted from your next bill or refunded on request."
+  },
+  {
+    "article_id": "KB-009",
+    "title": "Refunds and credit balances",
+    "url_name": "refunds-and-credit-balances",
+    "content": "A credit balance on your account (for example after an adjustment or an invoice correction) is normally deducted from your next bill.\n\nYou can ask for a refund instead. Refunds are paid by bank transfer to the IBAN you provide, within 10 working days of approval. Credits above EUR 50 remaining after a contract closes are refunded automatically with the final bill. Refunds are never paid in cash."
+  },
+  {
+    "article_id": "KB-010",
+    "title": "Complaints: how to file one and response times",
+    "url_name": "complaints-how-to-file-one-and-response-times",
+    "content": "You can file a complaint by phone, through the app (Help > Complaints), by email or by post. Include your customer ID, the supply point code and a description of the problem.\n\nENERGY sends a written, reasoned answer within 30 calendar days. If you are not satisfied with the answer, or receive none within 50 days, you can use the free out-of-court conciliation service provided by the energy regulator.\n\nFor billing errors, an invoice correction request is usually faster than a formal complaint."
+  },
+  {
+    "article_id": "KB-011",
+    "title": "Direct debit (SDD): activate, change or cancel",
+    "url_name": "direct-debit-sdd-activate-change-or-cancel",
+    "content": "With direct debit (SEPA Direct Debit, SDD) your bills are paid automatically from your bank account on the due date.\n\nActivate it through the voice assistant, the app (Payments > Direct debit) or the website. You need the IBAN and the name of the account holder; if the account holder is not the contract holder, both must sign the mandate. Activation takes up to 30 days: the next bill may still need to be paid manually, and the bill itself states whether direct debit is applied.\n\nYou can change the IBAN or cancel direct debit at any time with the same channels. Customers on direct debit receive a reminder email 5 days before each collection."
+  },
+  {
+    "article_id": "KB-012",
+    "title": "Direct debit with a foreign bank account",
+    "url_name": "direct-debit-with-a-foreign-bank-account",
+    "content": "ENERGY accepts direct debit on any bank account in the SEPA area (EU countries plus Iceland, Liechtenstein, Norway, Switzerland, the United Kingdom and a few others), as long as the IBAN is in euro.\n\nActivation works like a domestic account; processing can take up to 30 days. Accounts outside the SEPA area cannot be used for direct debit: pay by bank transfer instead."
+  },
+  {
+    "article_id": "KB-013",
+    "title": "Payment methods",
+    "url_name": "payment-methods",
+    "content": "You can pay ENERGY bills by:\n\n- Direct debit (SDD) — recommended, no risk of missing a due date.\n- Card or digital wallet in the ENERGY app or on the website.\n- Bank transfer, quoting the bill number.\n- Payment slip at post offices and authorised shops.\n\nPayments by transfer or slip take 2-3 working days to appear on your account. Keep the receipt until the payment is shown."
+  },
+  {
+    "article_id": "KB-014",
+    "title": "Late payments, reminders and interest",
+    "url_name": "late-payments-reminders-and-interest",
+    "content": "If a bill is not paid by the due date, ENERGY sends a reminder 10 days after the due date. Late-payment interest at the legal rate is charged on the next bill for each day of delay; there is no interest if you pay within 10 days.\n\nIf the bill remains unpaid, a formal notice is sent (see Supply suspension for non-payment). To stop the process, pay the bill or set up an installment plan: once a plan is created, no further reminder is sent for that bill."
+  },
+  {
+    "article_id": "KB-015",
+    "title": "Supply suspension for non-payment",
+    "url_name": "supply-suspension-for-non-payment",
+    "content": "ENERGY suspends a supply for non-payment only after this process:\n\n1. Reminder, 10 days after the due date.\n2. Formal notice by registered letter or certified email, giving at least 15 days to pay.\n3. For electricity, where the meter allows it, the available power is first reduced to 15% for 15 days.\n4. Suspension of the supply by the distributor.\n\nSupplies to customers registered as medically vulnerable are never suspended. A suspension can be avoided at any step by paying the overdue amount or agreeing an installment plan."
+  },
+  {
+    "article_id": "KB-016",
+    "title": "Reconnection after a suspension for non-payment",
+    "url_name": "reconnection-after-a-suspension-for-non-payment",
+    "content": "To have a supply reconnected after a suspension for non-payment:\n\n1. Pay the overdue amount (or agree an installment plan on it).\n2. Send the proof of payment through the voice assistant, the app or by email, unless you paid by card in the app, which is recognised immediately.\n3. ENERGY asks the distributor to reconnect the supply within 1 working day of receiving the proof.\n\nThe distributor reconnects within 2 working days of ENERGY's request. A reconnection fee of EUR 30 is charged on the next bill. If nobody can be present for a gas reconnection, the technician leaves a notice and a new appointment is needed, because gas reconnections require a safety check with access to the meter."
+  },
+  {
+    "article_id": "KB-017",
+    "title": "Gas supply cut off: common causes and what to do",
+    "url_name": "gas-supply-cut-off-common-causes-and-what-to-do",
+    "content": "If your gas supply stops, the most common causes are:\n\n- Suspension for non-payment, after a reminder and a formal notice.\n- A safety intervention by the distributor, for example after a leak report in the building.\n- Planned maintenance on the network (usually announced with a notice in the building).\n- A meter fault or a closed valve after a failed safety check.\n\nWhat to do: check that the valve near the meter is open, and ask your neighbours whether they have gas. If you smell gas, follow the emergency instructions and call 800-900-806. If your payments are up to date, ENERGY checks the account and contacts the distributor to find the cause; for a suspension, see Reconnection after a suspension for non-payment. Customers who are elderly, unwell or have young children at home are treated as a priority."
+  },
+  {
+    "article_id": "KB-018",
+    "title": "Gas leak or safety hazard: emergency line",
+    "url_name": "gas-leak-or-safety-hazard-emergency-line",
+    "content": "If you smell gas or suspect a leak:\n\n1. Do not switch lights or appliances on or off, do not use lighters or matches, and do not use your phone inside.\n2. Open doors and windows.\n3. Close the gas valve at the meter if you can reach it safely.\n4. Leave the property and call the emergency safety team on 800-900-806 from outside.\n\nThe emergency line is free and open 24 hours a day, 7 days a week. The distributor's technicians are on site as soon as possible, usually within 60 minutes."
+  },
+  {
+    "article_id": "KB-019",
+    "title": "Power outages and voltage surges",
+    "url_name": "power-outages-and-voltage-surges",
+    "content": "Outages, voltage surges and faults on the electricity network are handled by the distributor that manages the network in your area, not by ENERGY. The distributor's fault line is printed on your bill.\n\nAfter a voltage surge: unplug sensitive appliances, check the main switch, and note the date and time. If appliances were damaged, you can file a damage claim with the distributor, with photos and repair quotes. ENERGY can forward your report and help you find the distributor's contact details."
+  },
+  {
+    "article_id": "KB-020",
+    "title": "Switching to ENERGY from another supplier",
+    "url_name": "switching-to-energy-from-another-supplier",
+    "content": "Switching to ENERGY is free and there is no interruption of supply: only the supplier changes, the meter and the network stay the same.\n\nYou need: an identity document and tax code, the supply point code (POD for electricity, PDR for gas) shown on a recent bill of your current supplier, the address of the supply, and an IBAN if you want direct debit.\n\nYou do not need to cancel your current contract: ENERGY handles the switch. If the contract is signed by the 10th of the month, the supply starts on the first day of the following month; otherwise on the first day of the month after. Your current supplier sends a final bill with the last reading."
+  },
+  {
+    "article_id": "KB-021",
+    "title": "Moving home: transfer your supply to a new address",
+    "url_name": "moving-home-transfer-your-supply-to-a-new-address",
+    "content": "When you move, two things happen: the supply at your old address is closed and a supply is activated at the new address.\n\nOld address: ask to close the supply (or transfer it to the new occupant) and send a final reading on the moving day. The final bill is sent within 6 weeks.\n\nNew address:\n- If the meter is active in someone else's name, a contract transfer (voltura) is needed.\n- If the meter is inactive, an activation is needed (distributor fee applies).\n- If there is no meter, a new connection must be requested.\n\nPlease give at least 10 working days' notice before your moving date so the activation is ready when you arrive. You can arrange both steps in one call with the voice assistant."
+  },
+  {
+    "article_id": "KB-022",
+    "title": "Contract transfer (voltura) and its costs",
+    "url_name": "contract-transfer-voltura-and-its-costs",
+    "content": "A contract transfer (voltura) moves an active supply to a new contract holder at the same address, without interrupting it — for example when you move into a home where the meter is still active in the previous occupant's name.\n\nDocuments: identity document and tax code of the new holder, the supply point code (POD/PDR), a meter reading agreed with the previous holder (or taken on the day), and the title to occupy the property (ownership, rental contract or loan-for-use).\n\nCosts: ENERGY charges no fee. The distributor's fee, about EUR 25 for electricity and EUR 30 for gas, plus stamp duty of EUR 16, is added to the first bill. There is no distributor fee when the transfer follows the death of the holder and is requested by an heir living at the address."
+  },
+  {
+    "article_id": "KB-023",
+    "title": "Activating a supply: inactive meter or new connection",
+    "url_name": "activating-a-supply-inactive-meter-or-new-connection",
+    "content": "Inactive meter: if a meter exists but the supply is closed, ENERGY asks the distributor to reactivate it. The distributor's fee (about EUR 30 for electricity and EUR 45 for gas) and stamp duty of EUR 16 are added to the first bill; ENERGY charges no fee. Activation takes 5 working days for electricity and up to 10 working days for gas, which also requires a safety check of the system.\n\nNew connection: if there is no meter, the distributor sends a quote for the connection works; works start after the quote is accepted and paid.\n\nIn both cases you need an identity document, tax code, the address and cadastral data of the property."
+  },
+  {
+    "article_id": "KB-024",
+    "title": "Finding your contract's activation date",
+    "url_name": "finding-your-contract-s-activation-date",
+    "content": "The activation date of your contract (the day ENERGY started supplying you) is shown:\n\n- in the welcome email or letter sent after the contract was signed;\n- on your first bill, in the contract details box;\n- in the ENERGY app, under Contract > Details.\n\nThe voice assistant can also give you the date once you share your customer ID. For a switch, the activation date is always the first day of a month."
+  },
+  {
+    "article_id": "KB-025",
+    "title": "Increasing your contracted power (electricity)",
+    "url_name": "increasing-your-contracted-power-electricity",
+    "content": "Contracted power (for example 3 kW) limits how many appliances you can use at the same time. You can raise it in steps of 0.5 kW up to 6 kW, and above 6 kW in steps of 1 kW.\n\nCost: the distributor's fee, about EUR 25 plus EUR 60 for each kW added, plus an ENERGY administration fee of EUR 23, charged on the next bill. A higher power also slightly increases the fixed network charges on each bill.\n\nThe change is made remotely within 5 working days for most meters; if works are needed, the distributor contacts you first."
+  },
+  {
+    "article_id": "KB-026",
+    "title": "Moving the meter",
+    "url_name": "moving-the-meter",
+    "content": "The meter can be moved at your request, for example during renovation works. Meter moves are carried out by the distributor.\n\n- Moving the meter within 10 metres of its current position, in the same room or wall, is a standard job with a flat distributor fee of about EUR 200, done within 15 working days.\n- Moves beyond 10 metres, or that require works on the network, need an on-site survey and a quote.\n\nThe ENERGY administration fee is EUR 23. Any masonry work at the new position is the customer's responsibility."
+  },
+  {
+    "article_id": "KB-027",
+    "title": "Cooling-off period and early start of supply",
+    "url_name": "cooling-off-period-and-early-start-of-supply",
+    "content": "If you sign a contract remotely (by phone or online) or outside a shop, you have 14 days to withdraw without giving a reason and without any cost.\n\nYou cannot waive the cooling-off period, but you can ask ENERGY to start the supply before it ends. The right to withdraw still applies during those 14 days; if you withdraw after an early start, you pay only for the energy actually used and the regulated charges, and the supply returns to your previous supplier or to the default service.\n\nTo withdraw, use the form attached to the contract, call the customer line or write to ENERGY."
+  },
+  {
+    "article_id": "KB-028",
+    "title": "Price types and ENERGY offers",
+    "url_name": "price-types-and-energy-offers",
+    "content": "ENERGY offers two price types for electricity and gas:\n\n- ENERGY Fix 12: the energy price is fixed for 12 months from activation. After 12 months ENERGY sends the new conditions at least 3 months in advance.\n- ENERGY Flex: the energy price follows the monthly wholesale index (the electricity wholesale price index, or the gas wholesale index) plus a fixed spread. Bills change month to month with the market.\n\nOptional add-on: Renewable Origin, EUR 2 per month, certifies that the electricity you use is matched by renewable production.\n\nThese are the only current ENERGY offers. Network costs, system charges and taxes are the same for every offer."
+  },
+  {
+    "article_id": "KB-029",
+    "title": "Social bonus for energy bills",
+    "url_name": "social-bonus-for-energy-bills",
+    "content": "The social bonus is a discount on electricity and gas bills for households in economic hardship or with a family member on life-saving medical equipment.\n\nEconomic bonus: it is applied automatically to households whose income indicator is below the threshold set each year, once they have submitted the official income declaration. No separate application is needed, and the discount appears on the bill as a dedicated line.\n\nMedical bonus: it must be requested from the local municipality with a medical certificate.\n\nENERGY applies the bonus as soon as it is notified by the national system; it cannot grant or calculate it itself."
+  },
+  {
+    "article_id": "KB-030",
+    "title": "Closing a supply or ending your contract",
+    "url_name": "closing-a-supply-or-ending-your-contract",
+    "content": "To close a supply (for example because you are leaving a property), ask for deactivation through the voice assistant, the app or in writing, giving the date and a final meter reading. The distributor closes the meter within 5 working days, and the final bill is sent within 6 weeks.\n\nIf you are switching to another supplier, you do not need to contact ENERGY: the new supplier handles the change and your ENERGY contract ends automatically on the switch date.\n\nThere is no penalty for ending a contract. Any credit balance is refunded with the final bill."
+  }
+]

@@ -1,0 +1,6 @@
+# Databricks App installs with pip (requirements.txt). Top-level deps only.
+fastapi>=0.110
+uvicorn[standard]>=0.30
+databricks-sdk>=0.40
+httpx>=0.27
+psycopg[binary]>=3.1

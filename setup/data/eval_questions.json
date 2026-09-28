@@ -1,0 +1,66 @@
+[
+  {
+    "eval_id": "EV-01",
+    "request": "How do I send a self-reading of my meter, and on which days?"
+  },
+  {
+    "eval_id": "EV-02",
+    "request": "Can I split an overdue bill into installments, and is there a fee?"
+  },
+  {
+    "eval_id": "EV-03",
+    "request": "How long does it take to correct a wrong invoice?"
+  },
+  {
+    "eval_id": "EV-04",
+    "request": "How do I activate direct debit on my account?"
+  },
+  {
+    "eval_id": "EV-05",
+    "request": "Can I pay by direct debit from a bank account in another country?"
+  },
+  {
+    "eval_id": "EV-06",
+    "request": "My gas was suspended for non-payment. How do I get it reconnected and how long does it take?"
+  },
+  {
+    "eval_id": "EV-07",
+    "request": "What should I do if I smell gas at home?"
+  },
+  {
+    "eval_id": "EV-08",
+    "request": "How long does it take to switch my supply to ENERGY, and do I need to cancel my old contract?"
+  },
+  {
+    "eval_id": "EV-09",
+    "request": "How much does a contract transfer (voltura) cost?"
+  },
+  {
+    "eval_id": "EV-10",
+    "request": "Can I start my supply before the cooling-off period ends?"
+  },
+  {
+    "eval_id": "EV-11",
+    "request": "How much does it cost to increase my contracted power?"
+  },
+  {
+    "eval_id": "EV-12",
+    "request": "Can the meter be moved a few metres inside my property?"
+  },
+  {
+    "eval_id": "EV-13",
+    "request": "A voltage surge damaged my appliances. What should I do?"
+  },
+  {
+    "eval_id": "EV-14",
+    "request": "How often will I receive a bill if I use very little energy?"
+  },
+  {
+    "eval_id": "EV-15",
+    "request": "How long does a refund by bank transfer take?"
+  },
+  {
+    "eval_id": "EV-16",
+    "request": "How long do you take to answer a complaint?"
+  }
+]

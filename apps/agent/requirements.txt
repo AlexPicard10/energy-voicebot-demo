@@ -1,0 +1,4 @@
+mlflow>=3.16,<4
+openai-agents>=0.22,<0.23
+databricks-sdk>=0.100
+psycopg[binary,pool]>=3.1

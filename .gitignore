@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv-*/
+venv/
+*.egg-info/
+
+# Local MLflow runs (real runs log to the workspace experiment)
+mlflow.db
+mlruns/
+
+# Databricks bundle state
+.databricks/
+
+# Local config
+.env*
+.DS_Store
+*.pem
+.claude/
+CLAUDE.md
+AGENTS.md
