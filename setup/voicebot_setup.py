@@ -406,6 +406,13 @@ def phase_vs(w, cfg: Config) -> None:
         w.vector_search_endpoints.create_endpoint_and_wait(name=VS_ENDPOINT, endpoint_type=EndpointType.STANDARD)
 
     if index in {i.name for i in w.vector_search_indexes.list_indexes(endpoint_name=VS_ENDPOINT)}:
+        # A sync can only be triggered once the index is ready (on a re-run, the first build may still be going).
+        deadline = time.time() + 30 * 60
+        while not (status := w.vector_search_indexes.get_index(index_name=index).status).ready:
+            if time.time() > deadline:
+                raise TimeoutError(f"{index} still not ready after 30 min: {status.message}")
+            print(f"  index not ready yet ({(status.message or '')[:80]}) — waiting…")
+            time.sleep(30)
         w.vector_search_indexes.sync_index(index_name=index)
         print("  index exists — sync triggered")
     else:
