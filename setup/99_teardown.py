@@ -3,8 +3,8 @@
 # MAGIC # Teardown
 # MAGIC
 # MAGIC Deletes what `01_build_data_assets` created: the Unity Catalog schema (CASCADE), the Vector Search
-# MAGIC endpoint, the Lakebase schema and synced tables, and the Genie space. The apps, the Lakebase project
-# MAGIC and the AI Gateway service are kept: delete the apps from **Compute → Apps**.
+# MAGIC endpoint, the Lakebase schema and synced tables, the Genie space, and the AI Gateway service if it
+# MAGIC lives in the schema. The apps and the Lakebase project are kept: delete the apps from **Compute → Apps**.
 # MAGIC
 # MAGIC Type `DELETE` in the **confirm** widget, then click **Run all**.
 

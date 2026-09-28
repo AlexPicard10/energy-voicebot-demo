@@ -7,6 +7,8 @@
 # MAGIC
 # MAGIC - **Unity Catalog** schema `energy_voicebot`: generated customers, invoices and consumption, the
 # MAGIC   knowledge base, and the UC function `get_consumption_history`
+# MAGIC - **AI Gateway** model service `llm_endpoint` (unless it already exists), routing to the Foundation
+# MAGIC   Model `gateway_model`
 # MAGIC - **Vector Search** endpoint and index over the knowledge base
 # MAGIC - **Lakebase** project, tables `tickets` and `supervisor_alerts`, synced tables for the customer lookups
 # MAGIC - **MLflow** experiment, with traces stored in Unity Catalog tables
@@ -42,6 +44,7 @@ print(f"Workspace {w.config.host} · target {cfg.target} · schema {cfg.fqs}")
 # COMMAND ----------
 
 steps.phase_uc(w, cfg, reload_data=dbutils.widgets.get("reload_data") == "yes")
+steps.phase_gateway(w, cfg)
 steps.phase_vs(w, cfg)
 steps.phase_lakebase(w, cfg)
 experiment_id = steps.phase_mlflow(w, cfg)
@@ -54,5 +57,4 @@ print(f"""Done. Put these two values in target '{cfg.target}' of databricks.yml:
       genie_space_id: "{genie_space_id}"
       experiment_id: "{experiment_id}"
 
-Next (README, steps 5-6): create the AI Gateway model service in {cfg.fqs}, set llm_endpoint,
-then deploy the bundle.""")
+Next (README, step 5): deploy the bundle.""")

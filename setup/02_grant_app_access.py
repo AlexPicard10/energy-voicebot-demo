@@ -6,6 +6,7 @@
 # MAGIC `resources` can't express yet:
 # MAGIC
 # MAGIC - `CAN_USE` on the Vector Search endpoint (agent)
+# MAGIC - `EXECUTE` on the AI Gateway model service `llm_endpoint` (agent)
 # MAGIC - `SELECT` + `MODIFY` on the MLflow trace tables (agent)
 # MAGIC - Lakebase table privileges: tickets and alerts (agent), reading and resolving alerts (UI)
 # MAGIC

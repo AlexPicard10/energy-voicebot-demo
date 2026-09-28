@@ -34,6 +34,7 @@ class Config:
         self.schema = v["schema"]
         self.warehouse_id = unset(v["warehouse_id"])
         self.llm_endpoint = unset(v["llm_endpoint"])
+        self.gateway_model = v["gateway_model"]
         self.genie_space_id = unset(v["genie_space_id"])
         self.experiment_id = unset(v["experiment_id"])
         self.lakebase_project = v["lakebase_project"]

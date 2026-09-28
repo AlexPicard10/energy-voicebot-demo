@@ -85,36 +85,35 @@ Open `databricks.yml` in the Git folder. In `targets` → `dev` → `variables`,
 
 Open the notebook `setup/01_build_data_assets`, attach **serverless** compute and click **Run all**.
 The first run takes about 15 minutes. It creates the schema `energy_voicebot` with generated customers,
-invoices and consumption, the knowledge base and its Vector Search index, the Lakebase project and
-tables, the MLflow experiment and the Genie space — and prints `genie_space_id` and `experiment_id`.
+invoices and consumption, the knowledge base and its Vector Search index, the AI Gateway model service
+`<catalog>.energy_voicebot.energy_voicebot_gateway` (routing to `databricks-gpt-5-4-mini`), the Lakebase
+project and tables, the MLflow experiment and the Genie space — and prints `genie_space_id` and
+`experiment_id`.
 
-### 4. Create the AI Gateway model service
+To use another model, set `gateway_model` in the `dev` target before running it. To use an AI Gateway
+service you already have, set `llm_endpoint` to its full name: the notebook then leaves it as it is.
 
-In **AI Gateway**, create a model service that wraps a Foundation Model (for example
-`databricks-gpt-5-4-mini`), registered as `<catalog>.energy_voicebot.<name>`. Let all account users
-query it, or grant the agent app's service principal later (step 8 prints it).
+### 4. Finish `databricks.yml`
 
-### 5. Finish `databricks.yml`
+In the `dev` target, paste the `genie_space_id` and `experiment_id` printed in step 3.
 
-In the `dev` target, set `llm_endpoint` to the service's full name (`<catalog>.energy_voicebot.<name>`),
-and paste the `genie_space_id` and `experiment_id` printed in step 3.
-
-### 6. Deploy the bundle
+### 5. Deploy the bundle
 
 With `databricks.yml` open, click the **deployments** icon, choose the target **dev** and click
 **Deploy**, then **Deploy** again in the confirmation dialog. Progress shows in **Project output**.
 
-### 7. Start the apps
+### 6. Start the apps
 
 In the **Bundle resources** pane, click the run icon next to `energy_voicebot_agent`, then next to
 `energy_voicebot_ui`. Each run uploads the app's code and starts it.
 
-### 8. Grant the apps access
+### 7. Grant the apps access
 
-Open `setup/02_grant_app_access`, attach **serverless** compute and click **Run all**. If the AI Gateway
-service isn't open to all users, grant `CAN_QUERY` on it to the service principal the notebook prints.
+Open `setup/02_grant_app_access`, attach **serverless** compute and click **Run all**. It also grants
+the agent `EXECUTE` on the AI Gateway service; if you don't manage that service, the notebook prints the
+grant to ask its owner for.
 
-### 9. Try it
+### 8. Try it
 
 **Compute** → **Apps** → `energy-voicebot-ui` → open its URL in Chrome. Pick a caller and a scenario, or
 tap the mic. Click **Supervisor** to see the on-call alerts (try the **Angry escalation** scenario).
@@ -124,12 +123,12 @@ tap the mic. Click **Supervisor** to see the on-call alerts (try the **Angry esc
 - **Guardrails**: attach the competitor LLM-as-a-judge policy and the built-in ones —
   [setup/competitor_guardrail.md](setup/competitor_guardrail.md).
 - **Evaluation**: run `eval/evaluate_agent` (see [Observability and evaluation](#observability-and-evaluation)).
-- **Updates**: pull the Git folder, then repeat steps 6 and 7.
+- **Updates**: pull the Git folder, then repeat steps 5 and 6.
 - **Clean up**: delete both apps in **Compute** → **Apps**, then run `setup/99_teardown`.
 
 ### With the Databricks CLI instead
 
-The setup notebooks still run in the workspace; the deploy steps 6 and 7 become:
+The setup notebooks still run in the workspace; the deploy steps 5 and 6 become:
 
 ```bash
 databricks bundle deploy -t dev -p <profile>
@@ -195,7 +194,7 @@ from the last hours (dataset **traces**). Scorers: `relevance_to_query` and `saf
 ```bash
 cd apps/agent && pip install -r requirements.txt
 export DATABRICKS_CONFIG_PROFILE=<profile>
-export ENERGY_CATALOG=<catalog> ENERGY_LLM_ENDPOINT=<catalog>.energy_voicebot.<gateway> \
+export ENERGY_CATALOG=<catalog> ENERGY_LLM_ENDPOINT=<catalog>.energy_voicebot.energy_voicebot_gateway \
        ENERGY_GENIE_SPACE_ID=<id> \
        ENERGY_LAKEBASE_ENDPOINT=projects/energy-voicebot-oltp/branches/production/endpoints/primary \
        PGHOST=<lakebase-host> MLFLOW_TRACKING_URI=databricks MLFLOW_EXPERIMENT_ID=<id>

@@ -4,8 +4,9 @@
 #   energy-voicebot-ui      voice demo UI + supervisor panel
 #
 # Each app's `resources` grant its service principal exactly what it needs, at deploy time.
-# Install (see README.md): run setup/01_build_data_assets, fill in the `dev` target below, deploy the
-# bundle from the workspace (deployments icon → Deploy), start both apps, then run setup/02_grant_app_access.
+# Install (see README.md): run setup/01_build_data_assets (it also creates the AI Gateway model service),
+# fill in the `dev` target below, deploy the bundle from the workspace (deployments icon → Deploy), start
+# both apps, then run setup/02_grant_app_access.
 bundle:
   name: energy-voicebot
 
@@ -21,7 +22,11 @@ variables:
   warehouse_id:
     description: SQL warehouse used by setup and by the UC function tool
   llm_endpoint:
-    description: AI Gateway model service (3-level UC name) the agent calls
+    description: AI Gateway model service (3-level UC name) the agent calls; setup/01_build_data_assets creates it if absent
+    default: ${var.catalog}.${var.schema}.energy_voicebot_gateway
+  gateway_model:
+    description: Pay-per-token Foundation Model (in system.ai) that a new llm_endpoint service routes to
+    default: databricks-gpt-5-4-mini
   genie_space_id:
     description: Genie space over customers / invoices (printed by setup/01_build_data_assets)
   experiment_id:
@@ -45,13 +50,12 @@ variables:
 
 targets:
   # Fill in the <...> values. catalog and warehouse_id are needed before setup/01_build_data_assets;
-  # the other three after it (it prints genie_space_id and experiment_id).
+  # the other two after it (it prints genie_space_id and experiment_id).
   dev:
     default: true
     variables:
       catalog: "<catalog>"
       warehouse_id: "<warehouse-id>"
-      llm_endpoint: "<catalog>.energy_voicebot.<gateway-service-name>"
       genie_space_id: "<genie-space-id>"
       experiment_id: "<experiment-id>"
 

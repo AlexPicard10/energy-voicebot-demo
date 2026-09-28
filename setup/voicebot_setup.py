@@ -1,6 +1,7 @@
 """ENERGY voicebot — workspace setup, driven by the notebooks next to this file.
 
-  01_build_data_assets   phase_uc, phase_vs, phase_lakebase, phase_mlflow, phase_genie (before deploy)
+  01_build_data_assets   phase_uc, phase_gateway, phase_vs, phase_lakebase, phase_mlflow, phase_genie
+                         (before deploy)
   02_grant_app_access    post_deploy — grants that need the deployed apps' service principals
   99_teardown            teardown — delete everything the phases created
 
@@ -8,7 +9,8 @@ Configuration comes from the bundle target in databricks.yml (see bundle_config.
 
   uc        schema; tables customers / invoices / consumption / knowledgebase (+ generated demo data);
             UC function get_consumption_history
-  vs        Vector Search endpoint + delta-sync index knowledgebase_index
+  gateway   AI Gateway model service llm_endpoint (if absent), routing to a Foundation Model
+  vs      Vector Search endpoint + delta-sync index knowledgebase_index
   lakebase  Lakebase project (if absent); tables tickets / supervisor_alerts; SNAPSHOT synced tables
             customer_sync / invoice_sync
   mlflow    experiment whose traces are stored in Unity Catalog tables
@@ -351,6 +353,42 @@ RETURN
 
 
 # ---------------------------------------------------------------------------
+# Phase: AI Gateway
+# ---------------------------------------------------------------------------
+
+MODEL_SERVICES_API = "/api/2.1/unity-catalog/model-services"
+
+
+def phase_gateway(w, cfg: Config) -> None:
+    """The AI Gateway model service the agent calls (llm_endpoint), routed to the pay-per-token
+    Foundation Model gateway_model. An existing service with that name is left as it is."""
+    from databricks.sdk.errors import NotFound
+
+    _header(f"AI Gateway — {cfg.llm_endpoint}")
+    if not cfg.llm_endpoint:
+        raise ValueError(f"Set `llm_endpoint` in target '{cfg.target}' of databricks.yml (or remove it to use "
+                         "the default).")
+    try:
+        w.api_client.do("GET", f"{MODEL_SERVICES_API}/{cfg.llm_endpoint}")
+        print("  model service exists — kept as it is")
+        return
+    except NotFound:
+        pass
+    catalog, schema, service_id = cfg.llm_endpoint.split(".")
+    w.api_client.do("POST", MODEL_SERVICES_API,
+                    query={"parent": f"schemas/{catalog}.{schema}", "model_service_id": service_id},
+                    body={
+                        "comment": "ENERGY voicebot agent LLM (guardrails: setup/competitor_guardrail.md)",
+                        "config": {"routing": {"destinations": [{
+                            "name": "primary",
+                            "destination_type": "DESTINATION_TYPE_PAY_PER_TOKEN_FOUNDATION_MODEL",
+                            "pay_per_token_config": {"model": f"models/system.ai.{cfg.gateway_model}"},
+                        }]}},
+                    })
+    print(f"  model service created → system.ai.{cfg.gateway_model}")
+
+
+# ---------------------------------------------------------------------------
 # Phase: Vector Search
 # ---------------------------------------------------------------------------
 
@@ -525,9 +563,17 @@ def post_deploy(w, cfg: Config) -> None:
         cur.execute(f'GRANT SELECT, UPDATE ON {s}.supervisor_alerts TO "{ui}"')
     print("  agent: tickets, supervisor_alerts, customer_sync, invoice_sync   ui: supervisor_alerts (read, resolve)")
 
-    print("\n  If the AI Gateway service is not open to all users (it is not an app resource type yet):")
-    print(f"    AI Gateway → {cfg.llm_endpoint} → Permissions → grant CAN_QUERY to the service principal")
-    print(f"    {agent}  ({cfg.apps['energy_voicebot_agent']})")
+    # A model service is not an app resource type yet: querying it needs EXECUTE (plus USE CATALOG /
+    # USE SCHEMA on its parent, which the app's resources in the same schema already give).
+    try:
+        w.api_client.do("PATCH", f"/api/2.1/unity-catalog/permissions/model_service/{cfg.llm_endpoint}",
+                        body={"changes": [{"principal": agent, "add": ["EXECUTE"]}]})
+        print(f"  agent: EXECUTE on the AI Gateway model service {cfg.llm_endpoint}")
+    except Exception as e:  # noqa: BLE001 — e.g. a shared service you don't manage
+        print(f"\n  Could not grant EXECUTE on {cfg.llm_endpoint} ({str(e)[:120]}). Ask its owner to run:")
+        print(f"    databricks grants update model_service {cfg.llm_endpoint} \\\n"
+              f"      --json '{{\"changes\": [{{\"principal\": \"{agent}\", \"add\": [\"EXECUTE\"]}}]}}'"
+              f"   # {cfg.apps['energy_voicebot_agent']}")
 
 
 # ---------------------------------------------------------------------------
@@ -536,9 +582,11 @@ def post_deploy(w, cfg: Config) -> None:
 
 def teardown(w, cfg: Config) -> None:
     _header("Teardown")
+    owns_gateway = cfg.llm_endpoint.rsplit(".", 1)[0] == cfg.fqs  # created by phase_gateway, in the schema
     print(f"  Deletes: UC schema {cfg.fqs} (CASCADE), Vector Search endpoint {VS_ENDPOINT}, Lakebase schema\n"
-          f"  {cfg.schema}, synced tables, Genie space {cfg.genie_space_id or '-'}. The apps, the Lakebase project\n"
-          "  and the AI Gateway service are kept (delete the apps from Compute → Apps).")
+          f"  {cfg.schema}, synced tables, Genie space {cfg.genie_space_id or '-'}"
+          f"{f', AI Gateway service {cfg.llm_endpoint}' if owns_gateway else ''}. The apps and the Lakebase\n"
+          "  project are kept (delete the apps from Compute → Apps).")
 
     def attempt(label, fn):
         try:
@@ -558,4 +606,6 @@ def teardown(w, cfg: Config) -> None:
 
     attempt("Lakebase schema", drop_pg_schema)
     attempt("Vector Search endpoint", lambda: w.vector_search_endpoints.delete_endpoint(endpoint_name=VS_ENDPOINT))
+    if owns_gateway:
+        attempt("AI Gateway service", lambda: w.api_client.do("DELETE", f"{MODEL_SERVICES_API}/{cfg.llm_endpoint}"))
     attempt("UC schema", lambda: _sql(w, cfg, f"DROP SCHEMA IF EXISTS {cfg.fqs} CASCADE"))
