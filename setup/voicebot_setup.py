@@ -27,6 +27,7 @@ import json
 import random
 import textwrap
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -509,27 +510,33 @@ def phase_genie(w, cfg: Config) -> str:
     if cfg.genie_space_id:
         print(f"  using {cfg.genie_space_id} from the bundle target")
         return cfg.genie_space_id
-    resp = w.api_client.do("POST", "/api/2.0/genie/spaces", body={
-        "title": GENIE_TITLE,
-        "description": "Customer profiles and invoices for ENERGY's voicebot. Questions name one "
-                       "customer_id; answer for that customer only.",
-        "warehouse_id": cfg.warehouse_id,
-        "table_identifiers": [f"{cfg.fqs}.customers", f"{cfg.fqs}.invoices"],
-        "instructions": textwrap.dedent("""
+    # serialized_space (version 2): id-keyed items need a 32-hex id and must be sorted by it; text is
+    # given as arrays of strings; at most one text_instructions item.
+    new_id = lambda: uuid.uuid4().hex  # noqa: E731
+    space = {
+        "version": 2,
+        "config": {"sample_questions": sorted([{"id": new_id(), "question": [q]} for q in (
+            "For customer CUST-000142, what are their open invoices?",
+            "What is the total outstanding balance across all of CUST-000142's invoices?",
+            "Top 10 customers by overdue amount.",
+        )], key=lambda q: q["id"])},
+        "data_sources": {"tables": [{"identifier": f"{cfg.fqs}.customers"},
+                                    {"identifier": f"{cfg.fqs}.invoices"}]},
+        "instructions": {"text_instructions": [{"id": new_id(), "content": [
+            line + "\n" for line in textwrap.dedent("""
             - customer_id is the PK in customers (CUST-XXXXXX); invoices join on customer_id.
             - 'Overdue' means status='overdue' OR (due_date < current_date AND status='pending').
             - Currency is EUR. Consumption is kWh (electricity) and SMC (gas).
             - Italian regions are spelled in Italian (Lombardia, Lazio, Toscana, etc.).
             - When a request is on behalf of one caller, always filter by their customer_id.
             - For counts/sums spanning more than one table, compute each metric in its own
-              subquery and combine the scalars -- don't join detail rows directly.""").strip(),
-        "sample_questions": [{"content": q} for q in (
-            "For customer CUST-000142, what are their open invoices?",
-            "What is the total outstanding balance across all of CUST-000142's invoices?",
-            "Top 10 customers by overdue amount.",
-        )],
-    })
-    space_id = resp.get("space_id") or resp.get("id")
+              subquery and combine the scalars -- don't join detail rows directly.""").strip().splitlines()]}]},
+    }
+    space_id = w.genie.create_space(
+        warehouse_id=cfg.warehouse_id, serialized_space=json.dumps(space), title=GENIE_TITLE,
+        description="Customer profiles and invoices for ENERGY's voicebot. Questions name one "
+                    "customer_id; answer for that customer only.",
+    ).space_id
     print(f"  created {space_id}")
     return space_id
 
