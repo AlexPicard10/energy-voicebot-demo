@@ -314,7 +314,7 @@ def phase_uc(w, cfg: Config, reload_data: bool = True) -> None:
     if not reload_data:
         print("  reload_data=False: tables left as they are")
     else:
-        for table in ("customers", "invoices", "consumption", "knowledgebase"):
+        for table in ("customers", "invoices", "consumption"):
             _sql(w, cfg, f"DROP TABLE IF EXISTS {fqs}.{table}")
         _sql(w, cfg, f"""
             CREATE TABLE {fqs}.customers (
@@ -330,10 +330,13 @@ def phase_uc(w, cfg: Config, reload_data: bool = True) -> None:
             CREATE TABLE {fqs}.consumption (
               customer_id STRING, period STRING, commodity STRING, unit STRING, usage DOUBLE,
               amount_eur DOUBLE, avg_temp_c DOUBLE, days_in_period INT)""")
-        # AI Search embeds `content` directly (one row per article); CDF enables delta sync.
+        # AI Search embeds `content` directly (one row per article); CDF enables delta sync. The table is
+        # emptied, not dropped: its index keeps syncing from it (a re-created table would break the index).
         _sql(w, cfg, f"""
-            CREATE TABLE {fqs}.knowledgebase (article_id STRING, title STRING, url_name STRING, content STRING)
+            CREATE TABLE IF NOT EXISTS {fqs}.knowledgebase (article_id STRING, title STRING, url_name STRING,
+              content STRING)
             TBLPROPERTIES (delta.enableChangeDataFeed = true)""")
+        _sql(w, cfg, f"DELETE FROM {fqs}.knowledgebase")
 
         customers, invoices, consumption = _generate_data()
         _insert(w, cfg, "customers", customers)
@@ -404,9 +407,9 @@ def phase_gateway(w, cfg: Config) -> None:
 # Phase: AI Search (formerly Vector Search)
 # ---------------------------------------------------------------------------
 
-def phase_vs(w, cfg: Config, rebuild: bool = False) -> None:
+def phase_vs(w, cfg: Config) -> None:
     """AI Search endpoint + delta-sync index over the knowledge base, built with the AISearchClient
-    (databricks-ai-search). rebuild=True re-creates the index: its source table was just re-created."""
+    (databricks-ai-search). On a re-run the index is synced, never re-created."""
     from databricks.ai_search.client import AISearchClient
 
     client = AISearchClient(disable_notice=True)
@@ -426,15 +429,18 @@ def phase_vs(w, cfg: Config, rebuild: bool = False) -> None:
             state = client.get_index(VS_ENDPOINT, index).describe()["status"]["detailed_state"]
         except Exception as e:  # noqa: BLE001 — e.g. a half-deleted index: "Pipeline not found for this index"
             state = f"OFFLINE ({str(e)[:80]})"
-        if not rebuild and "OFFLINE" not in state:
+        if "OFFLINE" not in state:
             existing = client.get_index(VS_ENDPOINT, index)
             existing.wait_until_ready()  # a sync is rejected until the first build is done
             existing.sync()
             print("  index exists — sync triggered")
             return
-        print(f"  re-creating the index ({'source table re-created' if rebuild else state})…")
+        # An index re-created under the name of one deleted minutes earlier fails to build
+        # ("Index ... does not exist" in its sync pipeline): delete it, and let a later run create it.
         client.delete_index(VS_ENDPOINT, index)
         _wait(index_names, lambda names: index not in names, f"deletion of {index}")
+        raise RuntimeError(f"{index} had failed ({state}) and was deleted. Re-run this notebook in about "
+                           "10 minutes to create it again.")
 
     print(f"  creating the index, embeddings by {EMBEDDING_MODEL} (a few minutes)…")
     client.create_delta_sync_index_and_wait(

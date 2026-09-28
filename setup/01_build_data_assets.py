@@ -45,7 +45,7 @@ print(f"Workspace {w.config.host} · target {cfg.target} · schema {cfg.fqs}")
 
 steps.phase_uc(w, cfg, reload_data=dbutils.widgets.get("reload_data") == "yes")
 steps.phase_gateway(w, cfg)
-steps.phase_vs(w, cfg, rebuild=dbutils.widgets.get("reload_data") == "yes")
+steps.phase_vs(w, cfg)
 steps.phase_lakebase(w, cfg)
 experiment_id = steps.phase_mlflow(w, cfg)
 genie_space_id = steps.phase_genie(w, cfg)
