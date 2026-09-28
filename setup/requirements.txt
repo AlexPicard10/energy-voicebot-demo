@@ -4,3 +4,4 @@ psycopg[binary]>=3.1
 pyyaml>=6
 mlflow>=3.15              # Unity Catalog trace location on set_experiment
 databricks-agents>=1.10.1 # required by mlflow for UC trace storage
+databricks-ai-search>=0.78 # AISearchClient: the AI Search endpoint and index

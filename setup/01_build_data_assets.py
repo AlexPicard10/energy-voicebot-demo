@@ -9,13 +9,13 @@
 # MAGIC   knowledge base, and the UC function `get_consumption_history`
 # MAGIC - **AI Gateway** model service `llm_endpoint` (unless it already exists), routing to the Foundation
 # MAGIC   Model `gateway_model`
-# MAGIC - **Vector Search** endpoint and index over the knowledge base
+# MAGIC - **AI Search** (formerly Vector Search) endpoint and index over the knowledge base
 # MAGIC - **Lakebase** project, tables `tickets` and `supervisor_alerts`, synced tables for the customer lookups
 # MAGIC - **MLflow** experiment, with traces stored in Unity Catalog tables
 # MAGIC - **Genie** space over customers and invoices
 # MAGIC
-# MAGIC Attach **serverless** compute and click **Run all**. The first run takes about 15 minutes (the Vector
-# MAGIC Search endpoint and the Lakebase project are the slow parts). Re-running is safe.
+# MAGIC Attach **serverless** compute and click **Run all**. The first run takes about 15 minutes (the AI
+# MAGIC Search endpoint and index and the Lakebase project are the slow parts). Re-running is safe.
 
 # COMMAND ----------
 
@@ -45,7 +45,7 @@ print(f"Workspace {w.config.host} · target {cfg.target} · schema {cfg.fqs}")
 
 steps.phase_uc(w, cfg, reload_data=dbutils.widgets.get("reload_data") == "yes")
 steps.phase_gateway(w, cfg)
-steps.phase_vs(w, cfg)
+steps.phase_vs(w, cfg, rebuild=dbutils.widgets.get("reload_data") == "yes")
 steps.phase_lakebase(w, cfg)
 experiment_id = steps.phase_mlflow(w, cfg)
 genie_space_id = steps.phase_genie(w, cfg)

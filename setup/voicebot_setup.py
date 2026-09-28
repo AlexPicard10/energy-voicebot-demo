@@ -10,7 +10,7 @@ Configuration comes from the bundle target in databricks.yml (see bundle_config.
   uc        schema; tables customers / invoices / consumption / knowledgebase (+ generated demo data);
             UC function get_consumption_history
   gateway   AI Gateway model service llm_endpoint (if absent), routing to a Foundation Model
-  vs      Vector Search endpoint + delta-sync index knowledgebase_index
+  vs      AI Search (formerly Vector Search) endpoint + delta-sync index knowledgebase_index
   lakebase  Lakebase project (if absent); tables tickets / supervisor_alerts; SNAPSHOT synced tables
             customer_sync / invoice_sync
   mlflow    experiment whose traces are stored in Unity Catalog tables
@@ -37,7 +37,7 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 
 VS_ENDPOINT = "energy_voicebot_vs"
 KB_INDEX = "knowledgebase_index"
-EMBEDDING_MODEL = "databricks-gte-large-en"
+EMBEDDING_MODEL = "databricks-qwen3-embedding-0-6b"
 PG_DATABASE = "databricks_postgres"
 TRACE_TABLE_PREFIX = "voicebot_traces"
 EXPERIMENT_DIR = "energy-voicebot-agent"
@@ -330,7 +330,7 @@ def phase_uc(w, cfg: Config, reload_data: bool = True) -> None:
             CREATE TABLE {fqs}.consumption (
               customer_id STRING, period STRING, commodity STRING, unit STRING, usage DOUBLE,
               amount_eur DOUBLE, avg_temp_c DOUBLE, days_in_period INT)""")
-        # Vector Search embeds `content` directly (one row per article); CDF enables delta sync.
+        # AI Search embeds `content` directly (one row per article); CDF enables delta sync.
         _sql(w, cfg, f"""
             CREATE TABLE {fqs}.knowledgebase (article_id STRING, title STRING, url_name STRING, content STRING)
             TBLPROPERTIES (delta.enableChangeDataFeed = true)""")
@@ -401,51 +401,46 @@ def phase_gateway(w, cfg: Config) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Phase: Vector Search
+# Phase: AI Search (formerly Vector Search)
 # ---------------------------------------------------------------------------
 
-def phase_vs(w, cfg: Config) -> None:
-    from databricks.sdk.service.vectorsearch import (
-        DeltaSyncVectorIndexSpecRequest, EmbeddingSourceColumn, EndpointType,
-        PipelineType, VectorIndexType,
-    )
+def phase_vs(w, cfg: Config, rebuild: bool = False) -> None:
+    """AI Search endpoint + delta-sync index over the knowledge base, built with the AISearchClient
+    (databricks-ai-search). rebuild=True re-creates the index: its source table was just re-created."""
+    from databricks.ai_search.client import AISearchClient
 
+    client = AISearchClient(disable_notice=True)
     index = f"{cfg.fqs}.{KB_INDEX}"
-    _header(f"Vector Search — {VS_ENDPOINT} / {index}")
-    if VS_ENDPOINT not in {e.name for e in w.vector_search_endpoints.list_endpoints()}:
+    _header(f"AI Search — {VS_ENDPOINT} / {index}")
+    if VS_ENDPOINT not in {e["name"] for e in client.list_endpoints().get("endpoints", [])}:
         print(f"  creating endpoint {VS_ENDPOINT} (a few minutes)…")
-        w.vector_search_endpoints.create_endpoint(name=VS_ENDPOINT, endpoint_type=EndpointType.STANDARD)
-    # An index created while its endpoint is still provisioning never builds: wait for ONLINE first.
-    _wait(lambda: w.vector_search_endpoints.get_endpoint(endpoint_name=VS_ENDPOINT).endpoint_status.state.value,
-          lambda state: state == "ONLINE", f"endpoint {VS_ENDPOINT}")
+        client.create_endpoint_and_wait(name=VS_ENDPOINT, endpoint_type="STANDARD")
+    else:  # an index created while its endpoint is still provisioning never builds
+        client.wait_for_endpoint(VS_ENDPOINT)
 
     def index_names():
-        return {i.name for i in w.vector_search_indexes.list_indexes(endpoint_name=VS_ENDPOINT)}
+        return {i["name"] for i in client.list_indexes(VS_ENDPOINT).get("vector_indexes", [])}
 
     if index in index_names():
-        failed = lambda s: "failed" in (s.message or "").lower()  # noqa: E731
-        status = w.vector_search_indexes.get_index(index_name=index).status
-        if not failed(status):
-            # A sync can only be triggered once the index is ready (on a re-run, the first build may still be going).
-            status = _wait(lambda: w.vector_search_indexes.get_index(index_name=index).status,
-                           lambda s: s.ready or failed(s), f"index {index}")
-        if not failed(status):
-            w.vector_search_indexes.sync_index(index_name=index)
+        state = client.get_index(VS_ENDPOINT, index).describe()["status"]["detailed_state"]
+        if not rebuild and "OFFLINE" not in state:
+            existing = client.get_index(VS_ENDPOINT, index)
+            existing.wait_until_ready()  # a sync is rejected until the first build is done
+            existing.sync()
             print("  index exists — sync triggered")
             return
-        print(f"  index failed ({status.message[:80]}) — re-creating it")
-        w.vector_search_indexes.delete_index(index_name=index)
+        print(f"  re-creating the index ({'source table re-created' if rebuild else state})…")
+        client.delete_index(VS_ENDPOINT, index)
         _wait(index_names, lambda names: index not in names, f"deletion of {index}")
 
-    w.vector_search_indexes.create_index(
-        name=index, endpoint_name=VS_ENDPOINT, primary_key="article_id",
-        index_type=VectorIndexType.DELTA_SYNC,
-        delta_sync_index_spec=DeltaSyncVectorIndexSpecRequest(
-            source_table=f"{cfg.fqs}.knowledgebase", pipeline_type=PipelineType.TRIGGERED,
-            embedding_source_columns=[EmbeddingSourceColumn(
-                name="content", embedding_model_endpoint_name=EMBEDDING_MODEL)]),
+    print(f"  creating the index, embeddings by {EMBEDDING_MODEL} (a few minutes)…")
+    client.create_delta_sync_index_and_wait(
+        endpoint_name=VS_ENDPOINT, index_name=index, primary_key="article_id",
+        source_table_name=f"{cfg.fqs}.knowledgebase", pipeline_type="TRIGGERED",
+        embedding_source_column="content", embedding_model_endpoint_name=EMBEDDING_MODEL,
+        timeout=dt.timedelta(minutes=30),
     )
-    print("  index created — the first sync takes a few minutes")
+    print("  index ONLINE")
 
 
 # ---------------------------------------------------------------------------

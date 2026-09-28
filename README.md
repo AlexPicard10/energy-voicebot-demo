@@ -15,7 +15,7 @@ and every price or delay in them is illustrative.
 | **AI Gateway** | every agent LLM call goes through a gateway service: guardrails, rate limits, usage tracking ([setup/competitor_guardrail.md](setup/competitor_guardrail.md)) |
 | **Managed MCP servers** | a UC function and a Vector Search index are exposed to the agent as MCP tools, with no glue code |
 | **Unity Catalog governance** | each app's service principal gets exactly the grants declared in its bundle `resources` |
-| **Vector Search** | delta-sync index over the knowledge base |
+| **AI Search** (formerly Vector Search) | delta-sync index over the knowledge base |
 | **Genie** | natural-language questions over the caller's invoices (`ask_genie`, Databricks SDK) |
 | **Lakebase** | Postgres OLTP for write-backs (tickets, supervisor alerts) and synced tables for fast lookups |
 | **MLflow 3** | tracing to Unity Catalog tables, `mlflow.genai.evaluate()` |
@@ -64,12 +64,12 @@ eval/
 
 ### Prerequisites
 
-- A workspace with Unity Catalog, serverless compute, Databricks Apps, Lakebase, Vector Search and
-  Foundation Model APIs (`databricks-gte-large-en` for embeddings, `databricks-gpt-5-4-mini` for the UI's
+- A workspace with Unity Catalog, serverless compute, Databricks Apps, Lakebase, AI Search (formerly
+  Vector Search) and Foundation Model APIs (`databricks-qwen3-embedding-0-6b` for embeddings, `databricks-gpt-5-4-mini` for the UI's
   suggestions and the eval judges)
 - AI Gateway with service policies (beta: an account admin enables it from the account console **Previews** page)
 - A catalog where you can create a schema, and a SQL warehouse you can use
-- Permission to create apps, a Lakebase project and a Vector Search endpoint
+- Permission to create apps, a Lakebase project and an AI Search endpoint
 
 ### 1. Clone the repo into a Git folder
 
