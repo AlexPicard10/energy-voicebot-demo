@@ -422,7 +422,10 @@ def phase_vs(w, cfg: Config, rebuild: bool = False) -> None:
         return {i["name"] for i in client.list_indexes(VS_ENDPOINT).get("vector_indexes", [])}
 
     if index in index_names():
-        state = client.get_index(VS_ENDPOINT, index).describe()["status"]["detailed_state"]
+        try:
+            state = client.get_index(VS_ENDPOINT, index).describe()["status"]["detailed_state"]
+        except Exception as e:  # noqa: BLE001 — e.g. a half-deleted index: "Pipeline not found for this index"
+            state = f"OFFLINE ({str(e)[:80]})"
         if not rebuild and "OFFLINE" not in state:
             existing = client.get_index(VS_ENDPOINT, index)
             existing.wait_until_ready()  # a sync is rejected until the first build is done
