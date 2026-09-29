@@ -420,8 +420,11 @@ def phase_vs(w, cfg: Config) -> None:
         client.create_endpoint_and_wait(name=VS_ENDPOINT, endpoint_type="STANDARD")
     else:
         client.wait_for_endpoint(VS_ENDPOINT)
-    # A new endpoint reads ONLINE at once but can take 30+ min to host an index: until then the index
-    # waits in PROVISIONING_ENDPOINT. A Sync (or a run of its pipeline) started meanwhile fails the index.
+    # A new endpoint reads ONLINE at once but needs ~30 min before it can host an index; it is ready once
+    # it reports its throughput_info. An index created earlier waits in PROVISIONING_ENDPOINT, and a Sync
+    # (or a run of its pipeline) started meanwhile fails it.
+    _wait(lambda: client.get_endpoint(VS_ENDPOINT).get("throughput_info"), bool,
+          f"endpoint {VS_ENDPOINT} to be able to host an index (~30 min when new)", timeout_min=60)
     print("  Don't click Sync on the index, or Run on its pipeline, while it builds: that makes it fail.")
 
     def index_names():
@@ -442,7 +445,7 @@ def phase_vs(w, cfg: Config) -> None:
         client.delete_index(VS_ENDPOINT, index)
         _wait(index_names, lambda names: index not in names, f"deletion of {index}")
 
-    print(f"  creating the index, embeddings by {EMBEDDING_MODEL} (up to ~40 min on a new endpoint)…")
+    print(f"  creating the index, embeddings by {EMBEDDING_MODEL} (a few minutes)…")
     client.create_delta_sync_index_and_wait(
         endpoint_name=VS_ENDPOINT, index_name=index, primary_key="article_id",
         source_table_name=f"{cfg.fqs}.knowledgebase", pipeline_type="TRIGGERED",
