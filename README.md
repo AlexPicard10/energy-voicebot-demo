@@ -84,8 +84,11 @@ Open `databricks.yml` in the Git folder. In `targets` → `dev` → `variables`,
 ### 3. Build the data assets
 
 Open the notebook `setup/01_build_data_assets`, attach **serverless** compute and click **Run all**.
-The first run takes about 15 minutes. It creates the schema `energy_voicebot` with generated customers,
-invoices and consumption, the knowledge base and its Vector Search index, the AI Gateway model service
+The first run can take up to an hour, most of it waiting for a new AI Search endpoint to be able to host
+the index: leave the notebook running, and don't click **Sync** on the index or **Run** on its pipeline
+meanwhile — that makes the index fail (re-running the notebook re-creates it). It creates the schema
+`energy_voicebot` with generated customers, invoices and consumption, the knowledge base and its AI Search
+index, the AI Gateway model service
 `<catalog>.energy_voicebot.energy_voicebot_gateway` (routing to `databricks-gpt-5-4-mini`), the Lakebase
 project and tables, the MLflow experiment and the Genie space — and prints `genie_space_id` and
 `experiment_id`.

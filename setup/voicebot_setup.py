@@ -409,17 +409,20 @@ def phase_gateway(w, cfg: Config) -> None:
 
 def phase_vs(w, cfg: Config) -> None:
     """AI Search endpoint + delta-sync index over the knowledge base, built with the AISearchClient
-    (databricks-ai-search). On a re-run the index is synced, never re-created."""
+    (databricks-ai-search). On a re-run the index is synced; a failed index is re-created."""
     from databricks.ai_search.client import AISearchClient
 
     client = AISearchClient(disable_notice=True)
     index = f"{cfg.fqs}.{KB_INDEX}"
     _header(f"AI Search — {VS_ENDPOINT} / {index}")
     if VS_ENDPOINT not in {e["name"] for e in client.list_endpoints().get("endpoints", [])}:
-        print(f"  creating endpoint {VS_ENDPOINT} (a few minutes)…")
+        print(f"  creating endpoint {VS_ENDPOINT}…")
         client.create_endpoint_and_wait(name=VS_ENDPOINT, endpoint_type="STANDARD")
-    else:  # an index created while its endpoint is still provisioning never builds
+    else:
         client.wait_for_endpoint(VS_ENDPOINT)
+    # A new endpoint reads ONLINE at once but can take 30+ min to host an index: until then the index
+    # waits in PROVISIONING_ENDPOINT. A Sync (or a run of its pipeline) started meanwhile fails the index.
+    print("  Don't click Sync on the index, or Run on its pipeline, while it builds: that makes it fail.")
 
     def index_names():
         return {i["name"] for i in client.list_indexes(VS_ENDPOINT).get("vector_indexes", [])}
@@ -431,23 +434,20 @@ def phase_vs(w, cfg: Config) -> None:
             state = f"OFFLINE ({str(e)[:80]})"
         if "OFFLINE" not in state:
             existing = client.get_index(VS_ENDPOINT, index)
-            existing.wait_until_ready()  # a sync is rejected until the first build is done
+            existing.wait_until_ready(verbose=True, timeout=dt.timedelta(minutes=60))  # a sync needs a built index
             existing.sync()
             print("  index exists — sync triggered")
             return
-        # An index re-created under the name of one deleted minutes earlier fails to build
-        # ("Index ... does not exist" in its sync pipeline): delete it, and let a later run create it.
+        print(f"  index failed ({state}) — re-creating it")
         client.delete_index(VS_ENDPOINT, index)
         _wait(index_names, lambda names: index not in names, f"deletion of {index}")
-        raise RuntimeError(f"{index} had failed ({state}) and was deleted. Re-run this notebook in about "
-                           "10 minutes to create it again.")
 
-    print(f"  creating the index, embeddings by {EMBEDDING_MODEL} (a few minutes)…")
+    print(f"  creating the index, embeddings by {EMBEDDING_MODEL} (up to ~40 min on a new endpoint)…")
     client.create_delta_sync_index_and_wait(
         endpoint_name=VS_ENDPOINT, index_name=index, primary_key="article_id",
         source_table_name=f"{cfg.fqs}.knowledgebase", pipeline_type="TRIGGERED",
         embedding_source_column="content", embedding_model_endpoint_name=EMBEDDING_MODEL,
-        timeout=dt.timedelta(minutes=30),
+        verbose=True, timeout=dt.timedelta(minutes=60),
     )
     print("  index ONLINE")
 

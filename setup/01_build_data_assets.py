@@ -14,8 +14,9 @@
 # MAGIC - **MLflow** experiment, with traces stored in Unity Catalog tables
 # MAGIC - **Genie** space over customers and invoices
 # MAGIC
-# MAGIC Attach **serverless** compute and click **Run all**. The first run takes about 15 minutes (the AI
-# MAGIC Search endpoint and index and the Lakebase project are the slow parts). Re-running is safe.
+# MAGIC Attach **serverless** compute and click **Run all**. The first run can take up to an hour: a new AI
+# MAGIC Search endpoint takes a while before it can host the index. Meanwhile, don't click **Sync** on the
+# MAGIC index or **Run** on its pipeline: that makes the index fail. Re-running is safe.
 
 # COMMAND ----------
 
