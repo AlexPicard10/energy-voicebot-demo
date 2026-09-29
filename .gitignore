@@ -18,5 +18,6 @@ mlruns/
 .DS_Store
 *.pem
 .claude/
+.vscode/
 CLAUDE.md
 AGENTS.md
