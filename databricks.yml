@@ -32,6 +32,9 @@ variables:
     description: Genie space over customers / invoices (printed by setup/01_build_data_assets)
   experiment_id:
     description: MLflow experiment receiving the agent traces (printed by setup/01_build_data_assets)
+  vs_endpoint:
+    description: AI Search endpoint hosting the knowledge-base index; setup/01_build_data_assets creates it if absent (set an existing endpoint to reuse it)
+    default: energy_voicebot_vs
   lakebase_project:
     description: Lakebase project id
     default: energy-voicebot-oltp

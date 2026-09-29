@@ -35,7 +35,7 @@ from bundle_config import Config
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
-VS_ENDPOINT = "energy_voicebot_vs"
+DEFAULT_VS_ENDPOINT = "energy_voicebot_vs"  # databricks.yml vs_endpoint default: the endpoint 01 creates
 KB_INDEX = "knowledgebase_index"
 EMBEDDING_MODEL = "databricks-qwen3-embedding-0-6b"
 PG_DATABASE = "databricks_postgres"
@@ -413,41 +413,43 @@ def phase_vs(w, cfg: Config) -> None:
     from databricks.ai_search.client import AISearchClient
 
     client = AISearchClient(disable_notice=True)
-    index = f"{cfg.fqs}.{KB_INDEX}"
-    _header(f"AI Search — {VS_ENDPOINT} / {index}")
-    if VS_ENDPOINT not in {e["name"] for e in client.list_endpoints().get("endpoints", [])}:
-        print(f"  creating endpoint {VS_ENDPOINT}…")
-        client.create_endpoint_and_wait(name=VS_ENDPOINT, endpoint_type="STANDARD")
+    ep, index = cfg.vs_endpoint, f"{cfg.fqs}.{KB_INDEX}"
+    _header(f"AI Search — {ep} / {index}")
+    if ep not in {e["name"] for e in client.list_endpoints().get("endpoints", [])}:
+        print(f"  creating endpoint {ep}…")
+        client.create_endpoint_and_wait(name=ep, endpoint_type="STANDARD")
     else:
-        client.wait_for_endpoint(VS_ENDPOINT)
+        print(f"  using the existing endpoint {ep}")
+        client.wait_for_endpoint(ep)
     # A new endpoint reads ONLINE at once but needs ~30 min before it can host an index; it is ready once
     # it reports its throughput_info. An index created earlier waits in PROVISIONING_ENDPOINT, and a Sync
-    # (or a run of its pipeline) started meanwhile fails it.
-    _wait(lambda: client.get_endpoint(VS_ENDPOINT).get("throughput_info"), bool,
-          f"endpoint {VS_ENDPOINT} to be able to host an index (~30 min when new)", timeout_min=60)
+    # (or a run of its pipeline) started meanwhile fails it. Older endpoints are used as they are.
+    if time.time() - client.get_endpoint(ep)["creation_timestamp"] / 1000 < 3600:
+        _wait(lambda: client.get_endpoint(ep).get("throughput_info"), bool,
+              f"endpoint {ep} to be able to host an index (~30 min when new)", timeout_min=60)
     print("  Don't click Sync on the index, or Run on its pipeline, while it builds: that makes it fail.")
 
     def index_names():
-        return {i["name"] for i in client.list_indexes(VS_ENDPOINT).get("vector_indexes", [])}
+        return {i["name"] for i in client.list_indexes(ep).get("vector_indexes", [])}
 
     if index in index_names():
         try:
-            state = client.get_index(VS_ENDPOINT, index).describe()["status"]["detailed_state"]
+            state = client.get_index(ep, index).describe()["status"]["detailed_state"]
         except Exception as e:  # noqa: BLE001 — e.g. a half-deleted index: "Pipeline not found for this index"
             state = f"OFFLINE ({str(e)[:80]})"
         if "OFFLINE" not in state:
-            existing = client.get_index(VS_ENDPOINT, index)
+            existing = client.get_index(ep, index)
             existing.wait_until_ready(verbose=True, timeout=dt.timedelta(minutes=60))  # a sync needs a built index
             existing.sync()
             print("  index exists — sync triggered")
             return
         print(f"  index failed ({state}) — re-creating it")
-        client.delete_index(VS_ENDPOINT, index)
+        client.delete_index(ep, index)
         _wait(index_names, lambda names: index not in names, f"deletion of {index}")
 
     print(f"  creating the index, embeddings by {EMBEDDING_MODEL} (a few minutes)…")
     client.create_delta_sync_index_and_wait(
-        endpoint_name=VS_ENDPOINT, index_name=index, primary_key="article_id",
+        endpoint_name=ep, index_name=index, primary_key="article_id",
         source_table_name=f"{cfg.fqs}.knowledgebase", pipeline_type="TRIGGERED",
         embedding_source_column="content", embedding_model_endpoint_name=EMBEDDING_MODEL,
         verbose=True, timeout=dt.timedelta(minutes=60),
@@ -586,11 +588,16 @@ def post_deploy(w, cfg: Config) -> None:
     ui = w.apps.get(name=cfg.apps["energy_voicebot_ui"]).service_principal_client_id
     s = cfg.schema
 
-    # The Vector Search endpoint is not an app resource type.
-    ep = w.api_client.do("GET", f"/api/2.0/vector-search/endpoints/{VS_ENDPOINT}")
-    w.api_client.do("PATCH", f"/api/2.0/permissions/vector-search-endpoints/{ep['id']}", body={
-        "access_control_list": [{"service_principal_name": agent, "permission_level": "CAN_USE"}]})
-    print(f"  agent: CAN_USE on Vector Search endpoint {VS_ENDPOINT}")
+    # The AI Search endpoint is not an app resource type. Granting on an existing, shared endpoint needs
+    # CAN_MANAGE on it.
+    try:
+        ep = w.api_client.do("GET", f"/api/2.0/vector-search/endpoints/{cfg.vs_endpoint}")
+        w.api_client.do("PATCH", f"/api/2.0/permissions/vector-search-endpoints/{ep['id']}", body={
+            "access_control_list": [{"service_principal_name": agent, "permission_level": "CAN_USE"}]})
+        print(f"  agent: CAN_USE on AI Search endpoint {cfg.vs_endpoint}")
+    except Exception as e:  # noqa: BLE001
+        print(f"\n  Could not grant CAN_USE on AI Search endpoint {cfg.vs_endpoint} ({str(e)[:120]}). Ask its "
+              f"owner to grant CAN_USE to the service principal {agent} ({cfg.apps['energy_voicebot_agent']}).\n")
 
     # Writing traces to Unity Catalog needs SELECT + MODIFY on the experiment's trace tables.
     for t in ("otel_spans", "otel_annotations", "otel_logs", "otel_metrics"):
@@ -625,10 +632,12 @@ def post_deploy(w, cfg: Config) -> None:
 def teardown(w, cfg: Config) -> None:
     _header("Teardown")
     owns_gateway = cfg.llm_endpoint.rsplit(".", 1)[0] == cfg.fqs  # created by phase_gateway, in the schema
-    print(f"  Deletes: UC schema {cfg.fqs} (CASCADE), Vector Search endpoint {VS_ENDPOINT}, Lakebase schema\n"
-          f"  {cfg.schema}, synced tables, Genie space {cfg.genie_space_id or '-'}"
-          f"{f', AI Gateway service {cfg.llm_endpoint}' if owns_gateway else ''}. The apps and the Lakebase\n"
-          "  project are kept (delete the apps from Compute → Apps).")
+    index = f"{cfg.fqs}.{KB_INDEX}"
+    print(f"  Deletes: index {index}, UC schema {cfg.fqs} (CASCADE), Lakebase schema {cfg.schema}, synced\n"
+          f"  tables, Genie space {cfg.genie_space_id or '-'}"
+          f"{f', AI Gateway service {cfg.llm_endpoint}' if owns_gateway else ''}, and the AI Search endpoint\n"
+          f"  {cfg.vs_endpoint} if it is the demo's own ({DEFAULT_VS_ENDPOINT}) and hosts no other index. The apps\n"
+          "  and the Lakebase project are kept (delete the apps from Compute → Apps).")
 
     def attempt(label, fn):
         try:
@@ -647,7 +656,15 @@ def teardown(w, cfg: Config) -> None:
             cur.execute(f"DROP SCHEMA IF EXISTS {cfg.schema} CASCADE")
 
     attempt("Lakebase schema", drop_pg_schema)
-    attempt("Vector Search endpoint", lambda: w.vector_search_endpoints.delete_endpoint(endpoint_name=VS_ENDPOINT))
+    attempt(f"AI Search index {index}", lambda: w.vector_search_indexes.delete_index(index_name=index))
+    if cfg.vs_endpoint == DEFAULT_VS_ENDPOINT:  # never an endpoint the demo was pointed at
+        names = lambda: [i.name for i in w.vector_search_indexes.list_indexes(endpoint_name=cfg.vs_endpoint)]  # noqa: E731
+        others = _wait(names, lambda n: index not in n, f"deletion of {index}")
+        if others:
+            print(f"  kept AI Search endpoint {cfg.vs_endpoint}: it also hosts {', '.join(others)}")
+        else:
+            attempt(f"AI Search endpoint {cfg.vs_endpoint}",
+                    lambda: w.vector_search_endpoints.delete_endpoint(endpoint_name=cfg.vs_endpoint))
     if owns_gateway:
         attempt("AI Gateway service", lambda: w.api_client.do("DELETE", f"{MODEL_SERVICES_API}/{cfg.llm_endpoint}"))
     attempt("UC schema", lambda: _sql(w, cfg, f"DROP SCHEMA IF EXISTS {cfg.fqs} CASCADE"))

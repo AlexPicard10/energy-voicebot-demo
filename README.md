@@ -69,7 +69,8 @@ eval/
   suggestions and the eval judges)
 - AI Gateway with service policies (beta: an account admin enables it from the account console **Previews** page)
 - A catalog where you can create a schema, and a SQL warehouse you can use
-- Permission to create apps, a Lakebase project and an AI Search endpoint
+- Permission to create apps and a Lakebase project, and to create an AI Search endpoint — or an existing
+  endpoint you can create indexes on (see step 3)
 
 ### 1. Clone the repo into a Git folder
 
@@ -96,6 +97,11 @@ project and tables, the MLflow experiment and the Genie space — and prints `ge
 
 To use another model, set `gateway_model` in the `dev` target before running it. To use an AI Gateway
 service you already have, set `llm_endpoint` to its full name: the notebook then leaves it as it is.
+
+To put the index on an AI Search endpoint you already have, set `vs_endpoint` to its name: the notebook
+creates only the index there, with no wait for the endpoint, and `setup/99_teardown` deletes only the index.
+You need permission to create indexes on it, and `CAN_MANAGE` for step 6 to grant the agent `CAN_USE` on
+it (otherwise the notebook prints what to ask its owner).
 
 ### 4. Finish `databricks.yml`
 

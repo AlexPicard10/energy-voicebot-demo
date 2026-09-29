@@ -2,9 +2,11 @@
 # MAGIC %md
 # MAGIC # Teardown
 # MAGIC
-# MAGIC Deletes what `01_build_data_assets` created: the Unity Catalog schema (CASCADE), the Vector Search
-# MAGIC endpoint, the Lakebase schema and synced tables, the Genie space, and the AI Gateway service if it
-# MAGIC lives in the schema. The apps and the Lakebase project are kept: delete the apps from **Compute → Apps**.
+# MAGIC Deletes what `01_build_data_assets` created: the AI Search index, the Unity Catalog schema (CASCADE),
+# MAGIC the Lakebase schema and synced tables, the Genie space, the AI Gateway service if it lives in the schema,
+# MAGIC and the AI Search endpoint if it is the demo's own `energy_voicebot_vs` and hosts no other index (an
+# MAGIC existing endpoint set in `vs_endpoint` is kept). The apps and the Lakebase project are kept: delete the
+# MAGIC apps from **Compute → Apps**.
 # MAGIC
 # MAGIC Type `DELETE` in the **confirm** widget, then click **Run all**.
 

@@ -5,7 +5,7 @@
 # MAGIC Run this once the bundle is deployed and both apps have started. It grants what the apps' bundle
 # MAGIC `resources` can't express yet:
 # MAGIC
-# MAGIC - `CAN_USE` on the Vector Search endpoint (agent)
+# MAGIC - `CAN_USE` on the AI Search endpoint `vs_endpoint` (agent)
 # MAGIC - `EXECUTE` on the AI Gateway model service `llm_endpoint` (agent)
 # MAGIC - `SELECT` + `MODIFY` on the MLflow trace tables (agent)
 # MAGIC - Lakebase table privileges: tickets and alerts (agent), reading and resolving alerts (UI)
